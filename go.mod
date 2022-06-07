@@ -5,7 +5,6 @@ go 1.18
 require (
 	github.com/dgraph-io/badger/v3 v3.2103.2
 	github.com/golang/mock v1.6.0
-	github.com/rs/xid v1.4.0
 	go.etcd.io/etcd/client/v3 v3.5.4
 )
 
