@@ -1,4 +1,4 @@
-# Foobar
+# DBadger
 
 DBadger is a library for distributing badger KV stores across multiple concurrent services trying to access the data. It is designed to provide consistency for persistent KV data in a cost-friendly way.
 
