@@ -37,6 +37,10 @@ var (
 		Type:    299,
 		Message: "Error With Destination",
 	}
+	DBExist *Error = &Error{
+		Type:    300,
+		Message: "DB Path Already Exists On Disk",
+	}
 	CopyError *Error = &Error{
 		Type:    900,
 		Message: "Error With Copy Function",
