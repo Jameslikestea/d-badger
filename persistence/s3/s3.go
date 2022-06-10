@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
 var (
@@ -79,7 +80,9 @@ type s3Writer struct {
 
 // Write implements io.Writer
 func (s *s3Writer) Write(p []byte) (n int, err error) {
-	_, err = s.s.PutObject(&s3.PutObjectInput{
+	uploader := s3manager.NewUploaderWithClient(s.s)
+
+	_, err = uploader.Upload(&s3manager.UploadInput{
 		Bucket: &s.b,
 		Key:    &s.k,
 		Body:   bytes.NewReader(p),
@@ -87,5 +90,6 @@ func (s *s3Writer) Write(p []byte) (n int, err error) {
 	if err != nil {
 		return 0, err
 	}
+
 	return len(p), nil
 }
