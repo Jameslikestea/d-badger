@@ -6,6 +6,8 @@ import (
 	"github.com/Jameslikestea/d-badger/lock/etcd"
 	"github.com/Jameslikestea/d-badger/persistence"
 	"github.com/Jameslikestea/d-badger/persistence/disk"
+	"github.com/Jameslikestea/d-badger/persistence/s3"
+	"github.com/aws/aws-sdk-go/aws/session"
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
@@ -32,6 +34,12 @@ func (c *Config) WithOpts(opts ...Opt) {
 func WithDiskProvider(path string) Opt {
 	return func(c *Config) {
 		c.Persistence = disk.New(path)
+	}
+}
+
+func WithS3Provider(s *session.Session, bucket, prefix string) Opt {
+	return func(c *Config) {
+		c.Persistence = s3.New(s, bucket, prefix)
 	}
 }
 
