@@ -28,3 +28,8 @@ func (b *Badger) Open() (*badger.DB, error) {
 
 	return badger.Open(opts)
 }
+
+func (b *Badger) Close(bd *badger.DB) error {
+	directory := bd.Opts().Dir
+	return os.RemoveAll(directory)
+}

@@ -58,10 +58,14 @@ func (c *Connection) Close() error {
 	if err != nil {
 		return err
 	}
-	_, err = c.b.Backup(wrtr, 0)
-	if err != nil {
+
+	if _, err = c.b.Backup(wrtr, 0); err != nil {
 		return err
 	}
 
-	return nil
+	if err = c.b.Close(); err != nil {
+		return err
+	}
+
+	return c.conf.Badger.Close(c.b)
 }
