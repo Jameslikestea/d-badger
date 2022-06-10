@@ -5,7 +5,7 @@ DBadger is a library for distributing badger KV stores across multiple concurren
 ## Installation
 
 ```bash
-go get github.com/Jameslikestea/dbadger
+go get github.com/Jameslikestea/d-badger
 ```
 
 ## Usage
