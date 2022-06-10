@@ -10,31 +10,37 @@ go get github.com/Jameslikestea/dbadger
 
 ## Usage
 
+See [Examples](./examples/) for a showcase of some of the configurations this library supports.
+
 ```go
 package main
 
+import (
+	"log"
+
+	dbadger "github.com/Jameslikestea/d-badger"
+	clientv3 "go.etcd.io/etcd/client/v3"
+)
+
 func main() {
-  bs := badger.New("")
-  pp := disk.New("./test")
-  lm := etcd.New(c)
+	c, err := clientv3.NewFromURLs([]string{"localhost:2379"})
+	if err != nil {
+		log.Fatalf("Cannot Connect To ETCD: %v", err)
+	}
 
-  lock, err := lm.Acquire("some_table")
-  if err != nil {
-    panic(err)
-  }
-  defer lm.Release(lock)
+	config := dbadger.New()
+	config.WithOpts(dbadger.WithETCDLock(c), dbadger.WithDiskProvider("./test_lock"))
 
-  b, _ := bs.Open()
-  txn, _ := b.NewTransaction()
-  txn.Set([]byte("key"), []byte("val"))
-  txn.Commit()
+	d, err := config.GetDB("db1")
+	if err != nil {
+		log.Fatalf("Cannot get dbadger: %v", err)
+	}
+	defer d.Close()
 
-  fh, _ := pp.Put("db1")
-  _, err = b.Backup(fh)
-  if err != nil {
-    panic(err)
-  }
-
+	b := d.Badger()
+	txn := b.NewTransaction(true)
+	txn.Set([]byte("hello"), []byte("world"))
+	txn.Commit()
 }
 ```
 

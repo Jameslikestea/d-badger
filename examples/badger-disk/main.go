@@ -20,11 +20,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Cannot get dbadger: %v", err)
 	}
+	defer d.Close()
 
 	b := d.Badger()
 	txn := b.NewTransaction(true)
 	txn.Set([]byte("hello"), []byte("world"))
 	txn.Commit()
-
-	d.Close()
 }
