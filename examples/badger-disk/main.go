@@ -2,22 +2,9 @@ package main
 
 import (
 	"log"
-	"time"
 
-	"github.com/Jameslikestea/d-badger/dbs/badger"
-	"github.com/Jameslikestea/d-badger/errors"
-	"github.com/Jameslikestea/d-badger/lock"
-	"github.com/Jameslikestea/d-badger/lock/etcd"
-	"github.com/Jameslikestea/d-badger/persistence"
-	"github.com/Jameslikestea/d-badger/persistence/disk"
-	badge "github.com/dgraph-io/badger/v3"
+	dbadger "github.com/Jameslikestea/d-badger"
 	clientv3 "go.etcd.io/etcd/client/v3"
-)
-
-var (
-	lm lock.Manager
-	pp persistence.Provider
-	db *badger.Badger
 )
 
 func main() {
@@ -26,51 +13,18 @@ func main() {
 		log.Fatalf("Cannot Connect To ETCD: %v", err)
 	}
 
-	lm = etcd.New(c)
-	pp = disk.New("./test_lock")
-	// Use an empty string to use the default temp directory of the OS
-	db = badger.New("")
+	config := dbadger.New()
+	config.WithOpts(dbadger.WithETCDLock(c), dbadger.WithDiskProvider("./test_lock"))
 
-	// Acquire a lock
-	l, err := lm.Acquire("db1")
+	d, err := config.GetDB("db1")
 	if err != nil {
-		log.Fatalf("Cannot Acquire Lock: %v", err)
-	}
-	defer lm.Release(l)
-
-	// Open a new empty database
-	b, err := db.Open()
-	if err != nil {
-		log.Fatalf("Cannot Open Database: %v", err)
+		log.Fatalf("Cannot get dbadger: %v", err)
 	}
 
-	// Get the previous backup (This is the bit that we need to lock for)
-	// in this case we want to allow for an empty/fresh database to be
-	// loaded
-	bbk, err := pp.Get("db1")
-	if err != nil && err != errors.NoSuchKey && err != errors.KeyNotBlob {
-		log.Fatalf("Cannot Get Previous Backup: %v", err)
-	}
-
-	if bbk != nil {
-		// Choose a random number
-		b.Load(bbk, 1024)
-	}
-
+	b := d.Badger()
 	txn := b.NewTransaction(true)
-	ent := badge.NewEntry([]byte("some-key"), []byte("some-val")).WithTTL(10 * time.Minute)
-	txn.SetEntry(ent)
-	err = txn.Commit()
-	if err != nil {
-		log.Fatalf("Could not set entry: %v", err)
-	}
+	txn.Set([]byte("hello"), []byte("world"))
+	txn.Commit()
 
-	writer, err := pp.Put("db1")
-	if err != nil {
-		log.Fatalf("Cannot update database: %v", err)
-	}
-	_, err = b.Backup(writer, 0)
-	if err != nil {
-		log.Fatalf("Cannot Backup Data: %v", err)
-	}
+	d.Close()
 }
