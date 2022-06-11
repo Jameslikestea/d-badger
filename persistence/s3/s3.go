@@ -1,5 +1,7 @@
 package s3
 
+//go:generate go run github.com/golang/mock/mockgen -destination ./mocks/s3.go -package mocks github.com/aws/aws-sdk-go/service/s3/s3iface S3API
+
 import (
 	"bytes"
 	"fmt"
@@ -11,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
@@ -20,9 +23,9 @@ var (
 )
 
 type Service struct {
-	s *session.Session
-	b string
-	p string
+	svc s3iface.S3API
+	b   string
+	p   string
 }
 
 func New(
@@ -30,18 +33,18 @@ func New(
 	bucket string,
 	prefix string,
 ) *Service {
+	svc := s3.New(s)
+
 	return &Service{
-		s: s,
-		b: bucket,
-		p: prefix,
+		svc: svc,
+		b:   bucket,
+		p:   prefix,
 	}
 }
 
 // Get implements persistence.Provider
 func (s *Service) Get(key string) (io.Reader, error) {
-	svc := s3.New(s.s)
-
-	out, err := svc.GetObject(&s3.GetObjectInput{
+	out, err := s.svc.GetObject(&s3.GetObjectInput{
 		Bucket: &s.b,
 		Key:    aws.String(fmt.Sprintf("%s/%s", s.p, key)),
 	})
@@ -51,6 +54,9 @@ func (s *Service) Get(key string) (io.Reader, error) {
 			return nil, err
 		}
 		if aerr.Code() != s3.ErrCodeNoSuchKey {
+			return nil, errors.KeyError
+		}
+		if aerr.Code() == s3.ErrCodeNoSuchKey {
 			return nil, errors.NoSuchKey
 		}
 	}
@@ -60,11 +66,10 @@ func (s *Service) Get(key string) (io.Reader, error) {
 
 // Put implements persistence.Provider
 func (s *Service) Put(key string) (io.Writer, error) {
-	svc := s3.New(s.s)
 	k := fmt.Sprintf("%s/%s", s.p, key)
 
 	wrtr := &s3Writer{
-		s: svc,
+		s: s.svc,
 		b: s.b,
 		k: k,
 	}
@@ -73,7 +78,7 @@ func (s *Service) Put(key string) (io.Writer, error) {
 }
 
 type s3Writer struct {
-	s *s3.S3
+	s s3iface.S3API
 	b string
 	k string
 }

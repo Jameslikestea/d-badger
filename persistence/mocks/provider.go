@@ -5,6 +5,7 @@
 package mock_persistence
 
 import (
+	io "io"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -34,29 +35,31 @@ func (m *MockProvider) EXPECT() *MockProviderMockRecorder {
 }
 
 // Get mocks base method.
-func (m *MockProvider) Get(arg0, arg1 string) error {
+func (m *MockProvider) Get(arg0 string) (io.Reader, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret := m.ctrl.Call(m, "Get", arg0)
+	ret0, _ := ret[0].(io.Reader)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockProviderMockRecorder) Get(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockProviderMockRecorder) Get(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockProvider)(nil).Get), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockProvider)(nil).Get), arg0)
 }
 
 // Put mocks base method.
-func (m *MockProvider) Put(arg0, arg1 string) error {
+func (m *MockProvider) Put(arg0 string) (io.Writer, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Put", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret := m.ctrl.Call(m, "Put", arg0)
+	ret0, _ := ret[0].(io.Writer)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Put indicates an expected call of Put.
-func (mr *MockProviderMockRecorder) Put(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockProviderMockRecorder) Put(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Put", reflect.TypeOf((*MockProvider)(nil).Put), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Put", reflect.TypeOf((*MockProvider)(nil).Put), arg0)
 }
