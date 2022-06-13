@@ -1,1 +1,5 @@
 test_lock/**
+
+.idea
+
+__test__.etcd
