@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 
 	"github.com/Jameslikestea/d-badger/errors"
 	"github.com/Jameslikestea/d-badger/persistence"
@@ -54,6 +55,7 @@ func (s *Service) Get(key string) (io.Reader, error) {
 			return nil, err
 		}
 		if aerr.Code() != s3.ErrCodeNoSuchKey {
+			log.Println(err)
 			return nil, errors.KeyError
 		}
 		if aerr.Code() == s3.ErrCodeNoSuchKey {
@@ -78,19 +80,22 @@ func (s *Service) Put(key string) (io.Writer, error) {
 }
 
 type s3Writer struct {
-	s s3iface.S3API
-	b string
-	k string
+	s       s3iface.S3API
+	b       string
+	k       string
+	content []byte
 }
 
 // Write implements io.Writer
 func (s *s3Writer) Write(p []byte) (n int, err error) {
+	s.content = append(s.content, p...)
 	uploader := s3manager.NewUploaderWithClient(s.s)
 
 	_, err = uploader.Upload(&s3manager.UploadInput{
-		Bucket: &s.b,
-		Key:    &s.k,
-		Body:   bytes.NewReader(p),
+		Bucket:      &s.b,
+		Key:         &s.k,
+		Body:        bytes.NewReader(s.content),
+		ContentType: aws.String("binary/octet-stream"),
 	})
 	if err != nil {
 		return 0, err
